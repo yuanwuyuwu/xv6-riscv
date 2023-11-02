@@ -31,6 +31,8 @@ char* strchr(const char*, char c);
 int strcmp(const char*, const char*);
 void fprintf(int, const char*, ...);
 void printf(const char*, ...);
+void sprintf(char* buf,uint len,const char *fmt, ...);
+void atom_printf(char*buf);
 char* gets(char*, int max);
 uint strlen(const char*);
 void* memset(void*, int, uint);
@@ -39,3 +41,4 @@ void free(void*);
 int atoi(const char*);
 int memcmp(const void *, const void *, uint);
 void *memcpy(void *, const void *, uint);
+

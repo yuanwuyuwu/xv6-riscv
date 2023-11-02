@@ -7,9 +7,9 @@ main(int argc, char *argv[])
 {
   if(argc<2 || argc>2){
     write(1, "need 1 parameter\n", 17);
-    exit(0);
+    exit(-1);
   }
   int time=atoi(argv[1]);
   sleep(time);
-  exit(0);
+  exit(1);
 }

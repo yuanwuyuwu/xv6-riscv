@@ -111,44 +111,63 @@ printf(const char *fmt, ...)
   va_start(ap, fmt);
   vprintf(1, fmt, ap);
 }
-void
-sprintf(char* buf,uint len,const char *fmt, ...)
+
+static void
+atom_putc(int fd, char c)
 {
-  va_list ap;
-  int p[2];
-  pipe(p);
-  va_start(ap, fmt);
-  vprintf(p[1], fmt, ap);
-  close(p[1]);
-  for(int i=0;;i++){
-    
-    // char buf_t[2];
-    // read(p[0],&buf_t[0],1);
-    int t=read(p[0],&buf[i],1);
-    if(t==0){
-      // buf[i]='\0';
-      break;
+  write(fd, &c, 1);
+}
+// Print to the given fd. Only understands %d, %x, %p, %s.
+void
+atom_vprintf(int fd,char* buf, const char *fmt, va_list ap)
+{
+  char *s;
+  int c, i, state;
+
+  state = 0;
+  for(i = 0; fmt[i]; i++){
+    c = fmt[i] & 0xff;
+    if(state == 0){
+      if(c == '%'){
+        state = '%';
+      } else {
+        putc(fd, c);
+      }
+    } else if(state == '%'){
+      if(c == 'd'){
+        printint(fd, va_arg(ap, int), 10, 1);
+      } else if(c == 'l') {
+        printint(fd, va_arg(ap, uint64), 10, 0);
+      } else if(c == 'x') {
+        printint(fd, va_arg(ap, int), 16, 0);
+      } else if(c == 'p') {
+        printptr(fd, va_arg(ap, uint64));
+      } else if(c == 's'){
+        s = va_arg(ap, char*);
+        if(s == 0)
+          s = "(null)";
+        while(*s != 0){
+          putc(fd, *s);
+          s++;
+        }
+      } else if(c == 'c'){
+        atom_putc(fd, va_arg(ap, uint));
+      } else if(c == '%'){
+        atom_putc(fd, c);
+      } else {
+        // Unknown % sequence.  Print it to draw attention.
+        atom_putc(fd, '%');
+        atom_putc(fd, c);
+      }
+      state = 0;
     }
-    // printf("test=%d\n",t);
-    // sleep(10);
-    // if(buf_t[0]=='\0'){
-    //   printf("dh1\n");
-    //   break;
-    // }
-    // else{
-    //   printf("dh2\n");
-    // }
-    // buf_t[1]='\0';
-    // printf("debug=%d %s\n",i,buf_t);
   }
-  // printf("debug buf=%s",buf);
-  close(p[0]);
 }
 
 void
-atom_printf(char*buf)
+atom_fprintf(int fd,char* buf, const char *fmt, ...)
 {
-  // printf("here\n");
-  // printf(buf);
-  write(1,buf,strlen(buf));
+  va_list ap;
+  va_start(ap, fmt);
+  atom_vprintf(fd, buf, fmt, ap);
 }
